@@ -34,7 +34,7 @@ export interface SocketHandlers {
   onSpectatorUpdate?: (data: { spectators: Spectator[] }) => void
 }
 
-const SOCKET_URL = import.meta.env.VITE_SERVER_URL || window.location.origin
+const SOCKET_URL = window.location.origin
 
 let globalSocket: Socket | null = null
 
