@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/socket.io/(.*)",
+      "destination": "https://46.224.184.38/socket.io/$1"
+    }
+  ]
+}
