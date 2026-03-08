@@ -22,26 +22,39 @@ jobs:
       - name: Build server
         run: npm run build --workspace=server
 
-      - name: Deploy to Hetzner
-        uses: easingthemes/ssh-deploy@v5
-        with:
-          SSH_PRIVATE_KEY: ${{ secrets.HETZNER_SSH_KEY }}
-          REMOTE_HOST: ${{ secrets.HETZNER_HOST }}
-          REMOTE_USER: ${{ secrets.HETZNER_USER }}
-          SOURCE: |
-            server/dist/
-            server/package.json
-            server/package-lock.json
-          TARGET: ${{ secrets.DEPLOY_PATH }}
+      - name: Write SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.HETZNER_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
 
-      - name: Install and restart on server
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.HETZNER_HOST }}
-          username: ${{ secrets.HETZNER_USER }}
-          key: ${{ secrets.HETZNER_SSH_KEY }}
-          script: |
-            cd ${{ secrets.DEPLOY_PATH }}
-            cd server
-            npm ci --omit=dev
-            pm2 restart ice-rivals || pm2 start dist/index.js --name ice-rivals
+      - name: Deploy
+        env:
+          SSH_OPTS: -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new
+          REMOTE: ${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }}
+        run: |
+          ssh $SSH_OPTS "$REMOTE" "mkdir -p /tmp/ice-rivals-build/dist"
+
+          rsync -avz --delete -e "ssh $SSH_OPTS" \
+            server/dist/ "$REMOTE:/tmp/ice-rivals-build/dist/"
+          rsync -avz -e "ssh $SSH_OPTS" \
+            server/package.json server/Dockerfile \
+            "$REMOTE:/tmp/ice-rivals-build/"
+          rsync -avz -e "ssh $SSH_OPTS" \
+            k8s/ "$REMOTE:/tmp/ice-rivals-build/k8s/"
+
+          ssh $SSH_OPTS "$REMOTE" bash <<'REMOTE_SCRIPT'
+          set -euo pipefail
+          cd /tmp/ice-rivals-build
+
+          docker build -t ice-rivals:latest .
+          docker save ice-rivals:latest | ctr -n k8s.io images import -
+
+          kubectl apply -f k8s/namespace.yml
+          kubectl apply -f k8s/service.yml
+          kubectl apply -f k8s/ingress.yml
+          kubectl apply -f k8s/deployment.yml
+
+          kubectl rollout restart deployment/ice-rivals -n ice-rivals
+          kubectl rollout status deployment/ice-rivals -n ice-rivals --timeout=60s
+          REMOTE_SCRIPT

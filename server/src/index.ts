@@ -17,7 +17,11 @@ import { ElementId, IncidentId } from './game/cards'
 
 const app = express()
 const httpServer = createServer(app)
-const io = new Server(httpServer, { cors: { origin: '*', methods: ['GET', 'POST'] } })
+const ALLOWED_ORIGINS = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',')
+  : ['http://localhost:5173', 'http://localhost:3001']
+
+const io = new Server(httpServer, { cors: { origin: ALLOWED_ORIGINS, methods: ['GET', 'POST'] } })
 
 app.use(cors())
 app.use(express.json())
