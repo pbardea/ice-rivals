@@ -4,11 +4,11 @@ A multiplayer figure skating board game where players compete across 3 rounds, b
 
 ## How to Play
 
-**2–4 players** compete in a figure skating competition over **3 rounds**.
+**1–8 players** compete in a figure skating competition over **3 rounds**.
 
 ### Game Modes
-- **Singles** — Free-for-all (up to 4 players)
-- **Pairs** — 2v2 team-based
+- **Singles** — Free-for-all (1–8 players)
+- **Pairs** — Team-based (4+ players, even numbers required)
 
 ### Round Flow
 1. Each player receives a hand of **element cards** (jumps, spins, steps, choreography) and one **incident card** (sabotage)
@@ -21,6 +21,16 @@ A multiplayer figure skating board game where players compete across 3 rounds, b
 6. **Round 3 is the Championship** — all scores are multiplied by 1.5x
 
 The player (or team) with the highest cumulative score after 3 rounds wins.
+
+### Rooms & Multiplayer
+- Create a room from the home screen and share the link or room code with friends
+- Players who join after a game starts become **spectators** and can join the next game
+- If you refresh the page, you'll automatically rejoin your room
+- Rooms are cleaned up when all players leave
+
+## Live
+
+**https://icerivals.com**
 
 ## Development Setup
 
@@ -38,19 +48,20 @@ npm install
 npm run dev
 ```
 
-The client dev server proxies Socket.io requests to the backend automatically.
-
 ### Project Structure
 
 ```
 ├── client/          # React + Vite + Tailwind frontend
-│   └── src/
-│       ├── components/   # UI components (Lobby, GameBoard, etc.)
-│       ├── hooks/        # useSocket.ts (Socket.io client)
-│       └── types/        # TypeScript type definitions
+│   ├── src/
+│   │   ├── components/   # UI components (Lobby, GameBoard, etc.)
+│   │   ├── hooks/        # useSocket.ts (Socket.io client)
+│   │   └── types/        # TypeScript type definitions
+│   └── vercel.json       # Vercel rewrites (proxies socket.io to backend)
 ├── server/          # Express + Socket.io backend
 │   └── src/
 │       └── game/         # Game logic (cards, mechanics, rooms, state)
+├── k8s/             # Kubernetes manifests (Hetzner deployment)
+├── deploy.sh        # Manual deploy script
 └── package.json     # Monorepo root (npm workspaces)
 ```
 
@@ -61,14 +72,18 @@ npm run build    # Builds both client and server
 npm start        # Runs the server (serves client from client/dist)
 ```
 
-### Environment Variables
+### Deployment
 
-Copy `.env.example` to `.env` and configure:
+- **Frontend**: Deployed on Vercel (icerivals.com). Vercel rewrites proxy `/socket.io/*` to the backend.
+- **Backend**: Deployed on Hetzner via k3s (Kubernetes). CI deploys automatically on push to `main`.
+- **Manual deploy**: `npm run deploy` (reads secrets from `.env.deploy`)
+
+### Environment Variables
 
 | Variable | Description | Default |
 |---|---|---|
 | `PORT` | Server port | `3001` |
-| `VITE_SERVER_URL` | Backend URL for the client (only needed when hosting frontend separately) | `window.location.origin` |
+| `CORS_ORIGIN` | Allowed origins for Socket.io (comma-separated) | `http://localhost:5173` |
 
 ## Contributing
 
