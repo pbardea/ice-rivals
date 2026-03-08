@@ -1,8 +1,12 @@
-# Ice Rivals
+<p align="center">
+  <img src="client/public/favicon.png" alt="Ice Rivals" width="80" />
+</p>
 
-A multiplayer figure skating board game where players compete across 3 rounds, building skating programs, rolling dice, and sabotaging opponents.
+<h1 align="center"><a href="https://icerivals.com">Ice Rivals</a></h1>
 
-**Play now at [icerivals.com](https://icerivals.com)**
+<p align="center">A multiplayer figure skating board game where players compete across 3 rounds, building skating programs, rolling dice, and sabotaging opponents.</p>
+
+<p align="center"><strong><a href="https://icerivals.com">Play now →</a></strong></p>
 
 <p align="center">
   <img src="screenshot.png" alt="Ice Rivals gameplay" width="720" />
@@ -33,10 +37,6 @@ The player (or team) with the highest cumulative score after 3 rounds wins.
 - Players who join after a game starts become **spectators** and can join the next game
 - If you refresh the page, you'll automatically rejoin your room
 - Rooms are cleaned up when all players leave
-
-## Live
-
-**https://icerivals.com**
 
 ## Development Setup
 
@@ -105,3 +105,7 @@ npm start        # Runs the server (serves client from client/dist)
 - Keep game logic in `server/src/game/` — the server is the source of truth
 - The client is a thin UI layer driven by Socket.io events
 - TypeScript strict mode is enabled for both client and server
+
+## Bug Reports
+
+Found a bug? [Open an issue](https://github.com/pbardea/ice-rivals/issues) on GitHub with steps to reproduce and we'll take a look.
