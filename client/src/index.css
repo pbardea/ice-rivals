@@ -12,6 +12,13 @@
     -webkit-font-smoothing: antialiased;
     background: #0f0b2e;
   }
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus {
+    -webkit-text-fill-color: white;
+    -webkit-box-shadow: 0 0 0px 1000px rgba(15, 11, 46, 0.95) inset;
+    transition: background-color 5000s ease-in-out 0s;
+  }
 }
 
 @layer utilities {
