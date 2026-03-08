@@ -119,7 +119,7 @@ export function allPlayersReady(state: GameState): boolean {
   if (state.gameMode === 'pairs') {
     return active.length >= 4 && active.length % 2 === 0 && active.every(p => p.ready) && state.teams.length === active.length / 2
   }
-  return active.length >= 2 && active.every(p => p.ready)
+  return active.length >= 1 && active.every(p => p.ready)
 }
 
 export function setGameMode(roomCode: string, mode: GameMode): GameState | null {

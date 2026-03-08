@@ -30,7 +30,8 @@ export function Lobby({ players, joined, myId, gameMode, teams, roomCode, specta
   }
 
   const myPlayer = players.find(p => p.id === myId)
-  const allReady = players.length >= 2 && players.every(p => p.ready)
+  const allReady = players.length >= 1 && players.every(p => p.ready)
+  const isSoloGame = players.length === 1
   const isHost = players.length > 0 && players[0].id === myId
   const isPairs = gameMode === 'pairs'
   const expectedTeams = Math.floor(players.length / 2)
@@ -192,14 +193,19 @@ export function Lobby({ players, joined, myId, gameMode, teams, roomCode, specta
                 )
               })}
               <div className="text-lilac-400 text-sm text-center py-2 font-body">
-                {players.length < 2
-                  ? `Waiting for players (${players.length}/8)...`
+                {players.length === 0
+                  ? 'Waiting for players (0/8)...'
                   : isPairs && needsEvenPlayers
                   ? `Need an even number of players for Pairs (${players.length} joined)`
                   : players.length < 8
-                  ? `${players.length} players joined (up to 8)`
+                  ? `${players.length} player${players.length > 1 ? 's' : ''} joined (up to 8)`
                   : 'Room full!'}
               </div>
+              {isSoloGame && (
+                <div className="text-sparkle-gold/70 text-xs text-center font-body">
+                  Solo practice mode — invite others for the full experience!
+                </div>
+              )}
             </div>
 
             {/* Team Assignment (Pairs mode, host, enough even players) */}

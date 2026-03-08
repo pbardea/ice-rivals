@@ -89,6 +89,12 @@ export default function App() {
   }, [])
 
   const { joinRoom, createRoom, playerReady, submitProgram, nextRound, restartGame, setGameMode, setTeams, leaveRoom } = useSocket({
+    getRejoinInfo: () => {
+      const name = localStorage.getItem('ice_rivals_name')
+      const roomCode = getRoomCodeFromUrl()
+      if (name && roomCode) return { roomCode, playerName: name, playerId: myPlayerId }
+      return null
+    },
     onLobbyUpdate: data => {
       updateState({ players: data.players, gameMode: data.gameMode, teams: data.teams, myId: myPlayerId, error: null })
     },

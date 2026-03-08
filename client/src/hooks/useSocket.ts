@@ -16,7 +16,14 @@ import {
   Spectator,
 } from '../types/game'
 
+export interface RejoinInfo {
+  roomCode: string
+  playerName: string
+  playerId: string
+}
+
 export interface SocketHandlers {
+  getRejoinInfo?: () => RejoinInfo | null
   onLobbyUpdate?: (data: { players: Player[]; gameMode: GameMode; teams: Team[] }) => void
   onCatchUp?: (data: CatchUpPayload) => void
   onGameStart?: (data: GameStartPayload) => void
@@ -40,8 +47,11 @@ const SOCKET_URL = window.location.origin
 let globalSocket: Socket | null = null
 
 function getSocket(): Socket {
-  if (!globalSocket || !globalSocket.connected) {
-    globalSocket = io(SOCKET_URL, { autoConnect: false })
+  if (!globalSocket) {
+    globalSocket = io(SOCKET_URL, {
+      autoConnect: false,
+      transports: ['polling'],
+    })
   }
   return globalSocket
 }
@@ -57,6 +67,14 @@ export function useSocket(handlers: SocketHandlers) {
     socketRef.current = socket
 
     if (!socket.connected) socket.connect()
+
+    const onReconnect = () => {
+      const info = handlersRef.current.getRejoinInfo?.()
+      if (info) {
+        socket.emit('join_room', { roomCode: info.roomCode, playerName: info.playerName, playerId: info.playerId })
+      }
+    }
+    socket.io.on('reconnect', onReconnect)
 
     const onLobbyUpdate = (d: { players: Player[]; gameMode: GameMode; teams: Team[] }) => handlersRef.current.onLobbyUpdate?.(d)
     const onCatchUp = (d: CatchUpPayload) => handlersRef.current.onCatchUp?.(d)
@@ -110,6 +128,7 @@ export function useSocket(handlers: SocketHandlers) {
       socket.off('joined_as_spectator', onJoinedAsSpectator)
       socket.off('spectator_update', onSpectatorUpdate)
       socket.off('left_room', onLeftRoom)
+      socket.io.off('reconnect', onReconnect)
     }
   }, [])
 
