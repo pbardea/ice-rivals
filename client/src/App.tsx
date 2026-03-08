@@ -181,6 +181,19 @@ export default function App() {
       updateState({ submittedCount: data.submittedCount })
     },
     onError: data => {
+      if (data.message === 'Room not found.') {
+        // Room expired (server restart, etc.) — auto-create a new one
+        createRoom().then(code => {
+          const name = localStorage.getItem('ice_rivals_name')
+          window.history.pushState({}, '', `${window.location.pathname}?room=${code}`)
+          updateState({ roomCode: code, error: null, joined: false })
+          if (name) {
+            joinRoom(code, name, myPlayerId)
+            updateState({ joined: true, myId: myPlayerId })
+          }
+        })
+        return
+      }
       updateState({ error: data.message })
     },
     onTeamSubmitted: () => {

@@ -75,7 +75,7 @@ export function RoundSummary({ scores, leaderboard, players, teams, gameMode, my
       {/* Per-player breakdown */}
       <div className="space-y-4">
         {scores.map(rs => (
-          <div key={rs.playerId} className={`rounded-2xl border overflow-hidden ${isMe(rs.playerId) ? 'border-ice-500/50 bg-ice-900/30 shadow-[0_0_20px_rgba(99,102,241,0.1)]' : 'border-white/10 bg-white/5'}`}>
+          <div key={rs.playerId} className={`rounded-2xl border overflow-hidden ${isMe(rs.playerId) ? 'border-ice-500/50 bg-ice-900/30 shadow-[0_0_20px_rgba(14,165,233,0.1)]' : 'border-white/10 bg-white/5'}`}>
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
               <div className="flex items-center gap-2">
                 <span className="text-white font-semibold font-body">

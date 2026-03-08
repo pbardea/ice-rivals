@@ -54,7 +54,7 @@ export function PlayerHand({ hand, selectedIndices, onToggle, min, max, disabled
         className={`
           relative bg-gradient-to-br ${colorClass} border rounded-2xl p-3 text-left transition-all
           ${isSelected ? 'sparkle-ring scale-105 shadow-lg' : ''}
-          ${!disabled && (isSelected || canSelect) ? 'hover:scale-105 hover:shadow-[0_0_20px_rgba(99,102,241,0.2)] cursor-pointer' : 'opacity-50 cursor-not-allowed'}
+          ${!disabled && (isSelected || canSelect) ? 'hover:scale-105 hover:shadow-[0_0_20px_rgba(14,165,233,0.2)] cursor-pointer' : 'opacity-50 cursor-not-allowed'}
         `}
         style={isSelected ? { boxShadow: '0 0 0 2px rgba(251,191,36,0.6), 0 0 16px rgba(251,191,36,0.3), 0 0 30px rgba(251,191,36,0.1)' } : undefined}
       >

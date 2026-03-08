@@ -92,7 +92,7 @@ export function Lobby({ players, joined, myId, gameMode, teams, roomCode, specta
               <span className="text-sparkle-gold font-bold text-lg tracking-widest font-body">{roomCode}</span>
               <button
                 onClick={handleCopyLink}
-                className="ml-1 px-3 py-1 bg-white/10 hover:bg-white/20 border border-white/15 rounded-lg text-lilac-300 text-sm transition-all hover:shadow-[0_0_12px_rgba(168,85,247,0.15)]"
+                className="ml-1 px-3 py-1 bg-white/10 hover:bg-white/20 border border-white/15 rounded-lg text-lilac-300 text-sm transition-all hover:shadow-[0_0_12px_rgba(45,212,191,0.15)]"
               >
                 {copied ? '✓ Copied!' : 'Copy Link'}
               </button>
@@ -126,7 +126,7 @@ export function Lobby({ players, joined, myId, gameMode, teams, roomCode, specta
                 placeholder="Enter your name"
                 maxLength={20}
                 autoFocus
-                className="w-full bg-white/10 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-lilac-400/50 focus:outline-none focus:border-lilac-400/60 focus:shadow-[0_0_20px_rgba(168,85,247,0.15)] font-body transition-all [color-scheme:dark]"
+                className="w-full bg-white/10 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-lilac-400/50 focus:outline-none focus:border-lilac-400/60 focus:shadow-[0_0_20px_rgba(45,212,191,0.15)] font-body transition-all [color-scheme:dark]"
               />
             </div>
             <button
@@ -145,7 +145,7 @@ export function Lobby({ players, joined, myId, gameMode, teams, roomCode, specta
                 <button
                   onClick={() => onSetGameMode('singles')}
                   className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                    !isPairs ? 'bg-gradient-to-r from-ice-600 to-lilac-600 text-white shadow-[0_0_15px_rgba(99,102,241,0.3)]' : 'bg-white/8 text-white/60 hover:bg-white/15'
+                    !isPairs ? 'bg-gradient-to-r from-ice-500 to-frost-400 text-white shadow-[0_0_15px_rgba(14,165,233,0.3)]' : 'bg-white/8 text-white/60 hover:bg-white/15'
                   }`}
                 >
                   Singles
@@ -153,7 +153,7 @@ export function Lobby({ players, joined, myId, gameMode, teams, roomCode, specta
                 <button
                   onClick={() => onSetGameMode('pairs')}
                   className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                    isPairs ? 'bg-gradient-to-r from-ice-600 to-lilac-600 text-white shadow-[0_0_15px_rgba(99,102,241,0.3)]' : 'bg-white/8 text-white/60 hover:bg-white/15'
+                    isPairs ? 'bg-gradient-to-r from-ice-500 to-frost-400 text-white shadow-[0_0_15px_rgba(14,165,233,0.3)]' : 'bg-white/8 text-white/60 hover:bg-white/15'
                   }`}
                 >
                   Pairs
@@ -176,7 +176,7 @@ export function Lobby({ players, joined, myId, gameMode, teams, roomCode, specta
                     className="flex items-center justify-between frosted-glass rounded-xl px-4 py-3"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-ice-500/60 to-lilac-500/40 flex items-center justify-center text-white font-bold text-sm shadow-[0_0_10px_rgba(99,102,241,0.2)]">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-ice-500/60 to-frost-400/40 flex items-center justify-center text-white font-bold text-sm shadow-[0_0_10px_rgba(14,165,233,0.2)]">
                         {p.name[0].toUpperCase()}
                       </div>
                       <span className="text-white font-medium font-body">

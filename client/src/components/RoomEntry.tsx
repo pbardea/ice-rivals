@@ -72,7 +72,7 @@ export function RoomEntry({ onCreateRoom, onJoinRoom, error }: RoomEntryProps) {
               placeholder="Enter room code"
               maxLength={10}
               autoFocus
-              className="w-full bg-white/8 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-lilac-400/60 focus:outline-none focus:border-lilac-400/60 focus:shadow-[0_0_20px_rgba(168,85,247,0.15)] text-center text-xl tracking-widest uppercase font-body transition-all"
+              className="w-full bg-white/8 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-lilac-400/60 focus:outline-none focus:border-lilac-400/60 focus:shadow-[0_0_20px_rgba(45,212,191,0.15)] text-center text-xl tracking-widest uppercase font-body transition-all"
             />
             <button
               onClick={handleJoin}
