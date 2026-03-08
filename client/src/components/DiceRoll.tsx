@@ -68,8 +68,8 @@ export function DiceRoll({ results, players, teams, gameMode }: DiceRollProps) {
     return (
       <div className="text-center py-16 space-y-3">
         <div className="text-6xl inline-block" style={{ animation: 'wobble 0.8s infinite' }}>⛸️</div>
-        <div className="text-ice-300 text-xl font-semibold">Judges are watching...</div>
-        <div className="text-ice-500 text-sm animate-pulse">The fate of champions is being decided</div>
+        <div className="text-lilac-300 text-xl font-semibold font-body">Judges are watching...</div>
+        <div className="text-lilac-400 text-sm animate-pulse font-body">The fate of champions is being decided</div>
       </div>
     )
   }
@@ -125,33 +125,33 @@ function DiceResultRow({ result, playerName }: { result: DiceResult; playerName:
   const borderColor = result.fell
     ? 'border-red-500/60'
     : result.goe
-    ? 'border-yellow-400/60'
+    ? 'border-sparkle-gold/60'
     : result.good
-    ? 'border-blue-400/50'
-    : 'border-green-500/40'
+    ? 'border-frost-400/50'
+    : 'border-green-400/40'
 
   const bgColor = result.fell
     ? 'bg-red-950/60'
     : result.goe
-    ? 'bg-yellow-950/60'
+    ? 'bg-amber-950/40'
     : result.good
-    ? 'bg-blue-950/40'
+    ? 'bg-frost-900/40'
     : 'bg-green-950/40'
 
   const scoreColor = result.fell
     ? 'text-red-400'
     : result.goe
-    ? 'text-yellow-300'
+    ? 'text-sparkle-gold'
     : result.good
-    ? 'text-blue-300'
+    ? 'text-frost-400'
     : 'text-green-400'
 
   const quipColor = result.fell
     ? 'text-red-400'
     : result.goe
-    ? 'text-yellow-400'
+    ? 'text-sparkle-gold'
     : result.good
-    ? 'text-blue-400'
+    ? 'text-frost-400'
     : 'text-green-400/70'
 
   return (
@@ -174,15 +174,15 @@ function DiceResultRow({ result, playerName }: { result: DiceResult; playerName:
       {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-white/50 text-sm">{playerName}</span>
-          <span className="text-white font-bold">
+          <span className="text-white/50 text-sm font-body">{playerName}</span>
+          <span className="text-white font-bold font-body">
             {ELEMENT_EMOJIS[result.elementId]} {ELEMENT_NAMES[result.elementId]}
           </span>
         </div>
 
         {/* Quip */}
         <div
-          className={`text-sm font-bold ${quipColor} transition-all duration-300`}
+          className={`text-sm font-bold ${quipColor} transition-all duration-300 font-body`}
           style={{
             opacity: phase === 'spinning' ? 0 : 1,
             transform: phase === 'spinning' ? 'translateY(4px)' : 'translateY(0)',

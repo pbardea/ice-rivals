@@ -33,12 +33,13 @@ export function RoomEntry({ onCreateRoom, onJoinRoom, error }: RoomEntryProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-ice-900 via-ice-800 to-slate-900 flex items-center justify-center p-4">
-      <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 w-full max-w-md border border-white/20 shadow-2xl">
+    <div className="min-h-screen bg-gradient-to-br from-ice-900 via-ice-800 to-frost-900 flex items-center justify-center p-4">
+      <div className="frosted-glass rounded-3xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="text-6xl mb-3">⛸️</div>
-          <h1 className="text-3xl font-bold text-white">Ice Rivals</h1>
-          <p className="text-ice-300 mt-1">Figure Skating Board Game</p>
+          <div className="text-6xl mb-3 animate-float">⛸️</div>
+          <h1 className="font-display text-4xl text-white drop-shadow-lg">Ice Rivals</h1>
+          <p className="text-lilac-300 mt-2 font-body text-sm tracking-wide">Figure Skating Board Game</p>
+          <div className="mt-3 h-px w-24 mx-auto bg-gradient-to-r from-transparent via-sparkle-gold/40 to-transparent" />
         </div>
 
         {error && (
@@ -51,15 +52,15 @@ export function RoomEntry({ onCreateRoom, onJoinRoom, error }: RoomEntryProps) {
           <button
             onClick={handleCreate}
             disabled={creating}
-            className="w-full bg-ice-500 hover:bg-ice-400 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl transition-colors text-lg"
+            className="glow-button w-full text-white font-bold py-4 rounded-2xl text-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {creating ? 'Creating...' : 'Create Room'}
+            {creating ? 'Creating...' : '✨ Create Room'}
           </button>
 
           <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-white/20" />
-            <span className="text-ice-400 text-sm">or join existing</span>
-            <div className="flex-1 h-px bg-white/20" />
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+            <span className="text-lilac-400 text-sm font-body">or join existing</span>
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
           </div>
 
           <div className="space-y-3">
@@ -71,12 +72,12 @@ export function RoomEntry({ onCreateRoom, onJoinRoom, error }: RoomEntryProps) {
               placeholder="Enter room code"
               maxLength={10}
               autoFocus
-              className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-ice-400 focus:outline-none focus:border-ice-400 text-center text-xl tracking-widest uppercase"
+              className="w-full bg-white/8 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-lilac-400/60 focus:outline-none focus:border-lilac-400/60 focus:shadow-[0_0_20px_rgba(168,85,247,0.15)] text-center text-xl tracking-widest uppercase font-body transition-all"
             />
             <button
               onClick={handleJoin}
               disabled={!roomCode.trim()}
-              className="w-full bg-white/10 hover:bg-white/20 border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-colors text-lg"
+              className="w-full bg-white/8 hover:bg-white/15 border border-white/15 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-2xl transition-all text-lg hover:shadow-[0_0_20px_rgba(255,255,255,0.08)]"
             >
               Join Room
             </button>

@@ -69,21 +69,21 @@ export function RoundSummary({ scores, leaderboard, players, teams, gameMode, my
     <div className="space-y-6">
       <div className="text-center">
         <div className="text-3xl mb-1">📊</div>
-        <h2 className="text-white font-bold text-xl">Round {round} Results</h2>
+        <h2 className="text-white font-bold text-xl font-body">Round {round} Results</h2>
       </div>
 
       {/* Per-player breakdown */}
       <div className="space-y-4">
         {scores.map(rs => (
-          <div key={rs.playerId} className={`rounded-xl border overflow-hidden ${isMe(rs.playerId) ? 'border-ice-500/50 bg-ice-900/30' : 'border-white/10 bg-white/5'}`}>
+          <div key={rs.playerId} className={`rounded-2xl border overflow-hidden ${isMe(rs.playerId) ? 'border-ice-500/50 bg-ice-900/30 shadow-[0_0_20px_rgba(99,102,241,0.1)]' : 'border-white/10 bg-white/5'}`}>
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
               <div className="flex items-center gap-2">
-                <span className="text-white font-semibold">
+                <span className="text-white font-semibold font-body">
                   {getPlayerName(rs.playerId)}
-                  {isMe(rs.playerId) && <span className="text-ice-400 text-xs ml-1">(you)</span>}
+                  {isMe(rs.playerId) && <span className="text-lilac-400 text-xs ml-1">(you)</span>}
                 </span>
                 {rs.incidentApplied && (
-                  <span className="text-orange-400 text-xs bg-orange-900/30 px-2 py-0.5 rounded-full">
+                  <span className="text-sparkle-gold text-xs bg-amber-900/30 px-2 py-0.5 rounded-full border border-sparkle-gold/20 font-body">
                     {INCIDENT_NAMES[rs.incidentApplied] ?? rs.incidentApplied}
                   </span>
                 )}
@@ -94,13 +94,13 @@ export function RoundSummary({ scores, leaderboard, players, teams, gameMode, my
             </div>
             <div className="px-4 py-2 space-y-1">
               {rs.elementScores.map((r: DiceResult, i: number) => (
-                <div key={i} className="flex items-center gap-3 text-sm">
+                <div key={i} className="flex items-center gap-3 text-sm font-body">
                   <span className="text-white/50 text-xs w-4">{i + 1}.</span>
                   <span className="text-white/80 flex-1">{ELEMENT_NAMES[r.elementId] ?? r.elementId}</span>
                   <span className="text-white/50 text-xs">🎲{r.roll}</span>
                   {r.fell && <span className="text-red-400 text-xs">FALL</span>}
-                  {r.good && <span className="text-blue-400 text-xs">GOOD</span>}
-                  {r.goe && <span className="text-yellow-400 text-xs">GOE</span>}
+                  {r.good && <span className="text-frost-400 text-xs">GOOD</span>}
+                  {r.goe && <span className="text-sparkle-gold text-xs">GOE</span>}
                   <span className={`font-semibold w-8 text-right ${r.score >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                     {r.score >= 0 ? '+' : ''}{r.score}
                   </span>
@@ -116,7 +116,7 @@ export function RoundSummary({ scores, leaderboard, players, teams, gameMode, my
       {!isLastRound && (
         <button
           onClick={onNextRound}
-          className="w-full bg-ice-500 hover:bg-ice-400 text-white font-bold py-4 rounded-xl transition-colors text-lg"
+          className="glow-button w-full text-white font-bold py-4 rounded-2xl text-lg"
         >
           Next Round →
         </button>

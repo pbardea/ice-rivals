@@ -87,15 +87,15 @@ export function ProgramBuilder({
 
   if (submitted) {
     return (
-      <div className="bg-white/5 rounded-xl p-6 border border-white/10 text-center">
+      <div className="frosted-glass rounded-2xl p-6 text-center">
         <div className="text-4xl mb-3">✅</div>
-        <div className="text-white font-semibold text-lg">Program Submitted!</div>
-        <div className="text-ice-300 text-sm mt-1">
+        <div className="text-white font-semibold text-lg font-body">Program Submitted!</div>
+        <div className="text-lilac-300 text-sm mt-1 font-body">
           Waiting for others... ({submittedCount}/{totalPlayers} {totalLabel} ready)
         </div>
         <div className="mt-4 flex flex-wrap gap-2 justify-center">
           {selectedIds.map((id, i) => (
-            <span key={i} className="bg-ice-700/50 text-ice-200 text-xs px-3 py-1 rounded-full">
+            <span key={i} className="bg-ice-700/50 text-lilac-300 text-xs px-3 py-1 rounded-full border border-ice-500/30 font-body">
               {id.replace(/_/g, ' ')}
             </span>
           ))}
@@ -107,7 +107,7 @@ export function ProgramBuilder({
   return (
     <div className="space-y-6">
       {isPairs && (
-        <div className="text-center text-ice-300 text-sm">
+        <div className="text-center text-lilac-300 text-sm font-body">
           Combined team hand ({combinedHand.length} cards)
         </div>
       )}
@@ -121,13 +121,13 @@ export function ProgramBuilder({
       />
 
       {/* Incident Card */}
-      <div className="bg-orange-900/30 border border-orange-500/30 rounded-xl p-4">
+      <div className="bg-gradient-to-br from-amber-900/30 to-orange-900/20 border border-sparkle-gold/30 rounded-2xl p-4 shadow-[0_0_20px_rgba(251,191,36,0.08)]">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <span className="text-2xl">{incident.emoji}</span>
             <div>
-              <div className="text-orange-300 font-semibold">{incident.name}</div>
-              <div className="text-orange-400/80 text-xs">{incident.description}</div>
+              <div className="text-sparkle-gold font-semibold font-body">{incident.name}</div>
+              <div className="text-amber-400/70 text-xs font-body">{incident.description}</div>
             </div>
           </div>
           <label className="flex items-center gap-2 cursor-pointer">
@@ -138,18 +138,18 @@ export function ProgramBuilder({
                 setPlayIncident(e.target.checked)
                 if (!e.target.checked) setTargetPlayerId(null)
               }}
-              className="w-4 h-4 rounded accent-orange-500"
+              className="w-4 h-4 rounded accent-amber-500"
             />
-            <span className="text-orange-300 text-sm">Play this card</span>
+            <span className="text-sparkle-gold text-sm font-body">Play this card</span>
           </label>
         </div>
 
         {playIncident && (
           <div>
-            <div className="text-red-400/90 text-xs mb-2 italic">
+            <div className="text-red-400/90 text-xs mb-2 italic font-body">
               Cost: your lowest-scoring element will score 0
             </div>
-            <div className="text-orange-300/70 text-xs mb-2">
+            <div className="text-amber-400/70 text-xs mb-2 font-body">
               Target {isPairs ? 'team' : 'opponent'}:
             </div>
             <div className="flex flex-wrap gap-2">
@@ -161,9 +161,9 @@ export function ProgramBuilder({
                       <button
                         key={t.id}
                         onClick={() => setTargetPlayerId(t.id)}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all border ${
+                        className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all border font-body ${
                           targetPlayerId === t.id
-                            ? 'bg-orange-500 border-orange-400 text-white'
+                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 border-sparkle-gold text-white shadow-[0_0_12px_rgba(251,191,36,0.3)]'
                             : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10'
                         }`}
                       >
@@ -175,9 +175,9 @@ export function ProgramBuilder({
                     <button
                       key={p.id}
                       onClick={() => setTargetPlayerId(p.id)}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all border ${
+                      className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all border font-body ${
                         targetPlayerId === p.id
-                          ? 'bg-orange-500 border-orange-400 text-white'
+                          ? 'bg-gradient-to-r from-amber-500 to-orange-500 border-sparkle-gold text-white shadow-[0_0_12px_rgba(251,191,36,0.3)]'
                           : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10'
                       }`}
                     >
@@ -192,10 +192,10 @@ export function ProgramBuilder({
       <button
         onClick={handleSubmit}
         disabled={!canSubmit}
-        className="w-full bg-ice-500 hover:bg-ice-400 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl transition-colors text-lg"
+        className="glow-button w-full text-white font-bold py-4 rounded-2xl text-lg disabled:opacity-40 disabled:cursor-not-allowed"
       >
         {canSubmit
-          ? `Submit Program (${selectedIndices.length} elements)`
+          ? `✨ Submit Program (${selectedIndices.length} elements)`
           : `Select ${constraints.min}${constraints.min !== constraints.max ? `–${constraints.max}` : ''} elements`}
       </button>
     </div>

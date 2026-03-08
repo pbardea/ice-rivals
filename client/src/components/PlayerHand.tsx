@@ -22,10 +22,10 @@ const ELEMENT_INFO: Record<ElementId, { name: string; base: number; threshold: n
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  jump:   'from-blue-600/80 to-blue-800/80 border-blue-400/50',
-  spin:   'from-purple-600/80 to-purple-800/80 border-purple-400/50',
-  step:   'from-teal-600/80 to-teal-800/80 border-teal-400/50',
-  choreo: 'from-pink-600/80 to-pink-800/80 border-pink-400/50',
+  jump:   'from-indigo-500/80 to-frost-700/80 border-frost-400/50',
+  spin:   'from-lilac-500/80 to-purple-800/80 border-lilac-300/50',
+  step:   'from-teal-500/80 to-teal-800/80 border-teal-300/50',
+  choreo: 'from-pink-500/80 to-rose-800/80 border-pink-300/50',
 }
 
 interface PlayerHandProps {
@@ -52,24 +52,27 @@ export function PlayerHand({ hand, selectedIndices, onToggle, min, max, disabled
         onClick={() => !disabled && onToggle(idx)}
         disabled={disabled || (!isSelected && !canSelect)}
         className={`
-          relative bg-gradient-to-br ${colorClass} border rounded-xl p-3 text-left transition-all
-          ${isSelected ? 'ring-2 ring-white scale-105 shadow-lg' : ''}
-          ${!disabled && (isSelected || canSelect) ? 'hover:scale-105 cursor-pointer' : 'opacity-50 cursor-not-allowed'}
+          relative bg-gradient-to-br ${colorClass} border rounded-2xl p-3 text-left transition-all
+          ${isSelected ? 'sparkle-ring scale-105 shadow-lg' : ''}
+          ${!disabled && (isSelected || canSelect) ? 'hover:scale-105 hover:shadow-[0_0_20px_rgba(99,102,241,0.2)] cursor-pointer' : 'opacity-50 cursor-not-allowed'}
         `}
+        style={isSelected ? { boxShadow: '0 0 0 2px rgba(251,191,36,0.6), 0 0 16px rgba(251,191,36,0.3), 0 0 30px rgba(251,191,36,0.1)' } : undefined}
       >
         <div className="text-2xl mb-1">{info.emoji}</div>
-        <div className="text-white font-semibold text-sm leading-tight">{info.name}</div>
-        <div className="text-white/70 text-xs mt-1">
-          Base: <span className="text-white font-bold">{info.base}</span>
+        <div className="text-white font-semibold text-sm leading-tight font-body">{info.name}</div>
+        <div className="text-white/70 text-xs mt-1 font-body">
+          Base: <span className="text-sparkle-gold font-bold">{info.base}</span>
         </div>
-        <div className="text-white/70 text-xs">
+        <div className="text-white/70 text-xs font-body">
           Need: <span className="text-white font-bold">{info.threshold === 0 ? 'Auto' : `${info.threshold}+`}</span>
         </div>
         {isSelected && (
-          <div className="absolute -top-2 -right-2 w-5 h-5 bg-green-400 rounded-full flex items-center justify-center text-xs font-bold text-green-900">
+          <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-sparkle-gold to-amber-500 rounded-full flex items-center justify-center text-xs font-bold text-amber-900 shadow-[0_0_8px_rgba(251,191,36,0.5)]">
             {selectionOrder + 1}
           </div>
         )}
+        {/* Subtle shimmer overlay */}
+        <div className="absolute inset-0 rounded-2xl shimmer pointer-events-none opacity-30" />
       </button>
     )
   }
@@ -81,16 +84,16 @@ export function PlayerHand({ hand, selectedIndices, onToggle, min, max, disabled
     return (
       <div>
         <div className="flex justify-between items-center mb-3">
-          <span className="text-white/70 text-sm">Team Cards</span>
-          <span className="text-ice-300 text-sm font-medium">
+          <span className="text-white/70 text-sm font-body">Team Cards</span>
+          <span className="text-lilac-300 text-sm font-medium font-body">
             {selectedIndices.length}/{max} selected {min === max ? `(exactly ${min})` : `(${min}–${max})`}
           </span>
         </div>
-        <div className="text-white/50 text-xs mb-2 uppercase tracking-wider">Your Cards</div>
+        <div className="text-lilac-400/70 text-xs mb-2 uppercase tracking-wider font-body">Your Cards</div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
           {myCards.map((id, idx) => renderCard(id, idx))}
         </div>
-        <div className="text-white/50 text-xs mb-2 uppercase tracking-wider">Partner's Cards</div>
+        <div className="text-lilac-400/70 text-xs mb-2 uppercase tracking-wider font-body">Partner's Cards</div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {partnerCards.map((id, idx) => renderCard(id, idx + splitAt))}
         </div>
@@ -101,8 +104,8 @@ export function PlayerHand({ hand, selectedIndices, onToggle, min, max, disabled
   return (
     <div>
       <div className="flex justify-between items-center mb-3">
-        <span className="text-white/70 text-sm">Your Cards</span>
-        <span className="text-ice-300 text-sm font-medium">
+        <span className="text-white/70 text-sm font-body">Your Cards</span>
+        <span className="text-lilac-300 text-sm font-medium font-body">
           {selectedIndices.length}/{max} selected {min === max ? `(exactly ${min})` : `(${min}–${max})`}
         </span>
       </div>

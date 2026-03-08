@@ -65,7 +65,7 @@ export function GameBoard({
 }: GameBoardProps) {
   const isPairs = gameMode === 'pairs'
   return (
-    <div className="min-h-screen bg-gradient-to-br from-ice-900 via-ice-800 to-slate-900 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-ice-900 via-ice-800 to-frost-900 p-4">
       <div className="max-w-2xl mx-auto space-y-4">
         {/* Spectator Banner */}
         {isSpectator && (
@@ -78,15 +78,15 @@ export function GameBoard({
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-white font-bold text-xl">⛸️ Ice Rivals {isPairs && <span className="text-ice-300 text-sm font-normal ml-1">Pairs</span>}</h1>
-            <div className="text-ice-400 text-sm">
+            <h1 className="font-display text-2xl text-white drop-shadow-lg">⛸️ Ice Rivals {isPairs && <span className="text-lilac-300 text-sm font-body font-normal ml-1">Pairs</span>}</h1>
+            <div className="text-lilac-400 text-sm font-body">
               {round > 0 ? `Round ${round}: ${ROUND_NAMES[round]}` : 'Starting...'}
-              {round === 3 && <span className="text-yellow-400 ml-2">⚡ Scores x1.5!</span>}
+              {round === 3 && <span className="text-sparkle-gold ml-2">⚡ Scores x1.5!</span>}
             </div>
           </div>
           <div className="text-right">
-            <div className="text-ice-300 text-xs uppercase tracking-wider">Phase</div>
-            <div className="text-white text-sm font-semibold">{PHASE_LABELS[phase]}</div>
+            <div className="text-lilac-300 text-xs uppercase tracking-wider font-body">Phase</div>
+            <div className="text-white text-sm font-semibold font-body">{PHASE_LABELS[phase]}</div>
           </div>
         </div>
 
@@ -97,8 +97,8 @@ export function GameBoard({
         {(phase === 'round_start') && (
           <div className="text-center py-12">
             <div className="text-5xl animate-bounce mb-4">🎬</div>
-            <div className="text-white text-xl font-semibold">Get ready for {ROUND_NAMES[round]}!</div>
-            <div className="text-ice-400 mt-2">Dealing cards...</div>
+            <div className="text-white text-xl font-semibold font-body">Get ready for {ROUND_NAMES[round]}!</div>
+            <div className="text-lilac-400 mt-2 font-body">Dealing cards...</div>
           </div>
         )}
 
@@ -121,7 +121,7 @@ export function GameBoard({
 
         {(phase === 'revealing' || phase === 'rolling') && (
           <div className="space-y-4">
-            <div className="text-center text-ice-300 text-sm animate-pulse">
+            <div className="text-center text-lilac-300 text-sm animate-pulse font-body">
               {phase === 'revealing' ? 'All programs revealed! Rolling dice...' : 'Rolling...'}
             </div>
             <DiceRoll results={diceResults} players={players} teams={teams} gameMode={gameMode} />
@@ -144,12 +144,12 @@ export function GameBoard({
 
         {phase === 'game_over' && winner && (
           <div className="space-y-4">
-            <div className="text-center bg-yellow-900/30 border border-yellow-500/50 rounded-2xl p-6">
-              <div className="text-5xl mb-3">🏆</div>
-              <div className="text-white text-2xl font-bold">{winner.name} Wins!</div>
-              <div className="text-yellow-400 text-lg mt-1">Final Score: {winner.total}</div>
+            <div className="text-center frosted-glass rounded-3xl p-6 border border-sparkle-gold/30 shadow-[0_0_40px_rgba(251,191,36,0.15)]">
+              <div className="text-5xl mb-3 animate-float">🏆</div>
+              <div className="font-display text-3xl text-white drop-shadow-lg">{winner.name} Wins!</div>
+              <div className="text-sparkle-gold text-lg mt-2 font-body font-bold">Final Score: {winner.total}</div>
               {winner.playerId === myId && (
-                <div className="text-yellow-300 text-sm mt-2 animate-bounce">That's you! Congratulations!</div>
+                <div className="text-sparkle-gold text-sm mt-2 animate-bounce font-body">That's you! Congratulations!</div>
               )}
             </div>
             <RoundSummary
@@ -165,9 +165,9 @@ export function GameBoard({
             />
             <button
               onClick={onRestart}
-              className="w-full bg-ice-500 hover:bg-ice-400 text-white font-bold py-4 rounded-xl transition-colors text-lg"
+              className="glow-button w-full text-white font-bold py-4 rounded-2xl text-lg"
             >
-              🔄 Play Again
+              ✨ Play Again
             </button>
           </div>
         )}
