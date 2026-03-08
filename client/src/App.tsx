@@ -88,7 +88,7 @@ export default function App() {
     setState(prev => ({ ...prev, ...updates }))
   }, [])
 
-  const { joinRoom, createRoom, playerReady, submitProgram, nextRound, restartGame, setGameMode, setTeams } = useSocket({
+  const { joinRoom, createRoom, playerReady, submitProgram, nextRound, restartGame, setGameMode, setTeams, leaveRoom } = useSocket({
     onLobbyUpdate: data => {
       updateState({ players: data.players, gameMode: data.gameMode, teams: data.teams, myId: myPlayerId, error: null })
     },
@@ -195,6 +195,10 @@ export default function App() {
     onSpectatorUpdate: data => {
       updateState({ spectators: data.spectators })
     },
+    onLeftRoom: () => {
+      setState({ ...INITIAL_STATE, roomCode: null })
+      window.history.pushState({}, '', window.location.pathname)
+    },
   })
 
   // Auto-rejoin on page refresh if we have a room code and stored name
@@ -237,6 +241,10 @@ export default function App() {
     updateState({ phase: 'round_start' })
   }
 
+  function handleLeave() {
+    leaveRoom()
+  }
+
   function handleRestart() {
     restartGame()
   }
@@ -265,6 +273,7 @@ export default function App() {
         onReady={playerReady}
         onSetGameMode={setGameMode}
         onSetTeams={setTeams}
+        onLeave={handleLeave}
         error={state.error}
       />
     )

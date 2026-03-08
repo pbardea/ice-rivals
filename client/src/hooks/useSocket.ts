@@ -32,6 +32,7 @@ export interface SocketHandlers {
   onRoomCreated?: (data: { roomCode: string }) => void
   onJoinedAsSpectator?: (data: { roomCode: string }) => void
   onSpectatorUpdate?: (data: { spectators: Spectator[] }) => void
+  onLeftRoom?: () => void
 }
 
 const SOCKET_URL = window.location.origin
@@ -73,6 +74,7 @@ export function useSocket(handlers: SocketHandlers) {
     const onRoomCreated = (d: { roomCode: string }) => handlersRef.current.onRoomCreated?.(d)
     const onJoinedAsSpectator = (d: { roomCode: string }) => handlersRef.current.onJoinedAsSpectator?.(d)
     const onSpectatorUpdate = (d: { spectators: Spectator[] }) => handlersRef.current.onSpectatorUpdate?.(d)
+    const onLeftRoom = () => handlersRef.current.onLeftRoom?.()
 
     socket.on('lobby_update', onLobbyUpdate)
     socket.on('catch_up', onCatchUp)
@@ -89,6 +91,7 @@ export function useSocket(handlers: SocketHandlers) {
     socket.on('room_created', onRoomCreated)
     socket.on('joined_as_spectator', onJoinedAsSpectator)
     socket.on('spectator_update', onSpectatorUpdate)
+    socket.on('left_room', onLeftRoom)
 
     return () => {
       socket.off('lobby_update', onLobbyUpdate)
@@ -106,6 +109,7 @@ export function useSocket(handlers: SocketHandlers) {
       socket.off('room_created', onRoomCreated)
       socket.off('joined_as_spectator', onJoinedAsSpectator)
       socket.off('spectator_update', onSpectatorUpdate)
+      socket.off('left_room', onLeftRoom)
     }
   }, [])
 
@@ -149,5 +153,9 @@ export function useSocket(handlers: SocketHandlers) {
     socketRef.current?.emit('set_teams', { teams })
   }, [])
 
-  return { joinRoom, createRoom, playerReady, submitProgram, nextRound, restartGame, setGameMode, setTeams }
+  const leaveRoom = useCallback(() => {
+    socketRef.current?.emit('leave_room')
+  }, [])
+
+  return { joinRoom, createRoom, playerReady, submitProgram, nextRound, restartGame, setGameMode, setTeams, leaveRoom }
 }

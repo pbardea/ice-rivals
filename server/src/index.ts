@@ -420,6 +420,36 @@ io.on('connection', (socket: Socket) => {
     }
   })
 
+  socket.on('leave_room', () => {
+    const playerId = socketToPlayerId.get(socket.id)
+    const roomCode = getRoomForSocket(socket)
+    if (!playerId || !roomCode) return
+
+    const state = getRoom(roomCode)
+    if (!state) return
+
+    const isSpectator = state.spectators.some(s => s.id === playerId)
+    if (isSpectator) {
+      removeSpectator(roomCode, playerId)
+    } else {
+      disconnectPlayer(roomCode, playerId)
+    }
+
+    playerIdToSocket.delete(playerId)
+    socketToPlayerId.delete(socket.id)
+    socketToRoom.delete(socket.id)
+    socket.leave(roomCode)
+
+    socket.emit('left_room')
+
+    const updated = getRoom(roomCode)
+    if (updated) {
+      io.to(roomCode).emit('lobby_update', { players: updated.players, gameMode: updated.gameMode, teams: updated.teams })
+      io.to(roomCode).emit('spectator_update', { spectators: updated.spectators })
+    }
+    console.log(`[Leave] ${playerId} left room ${roomCode}`)
+  })
+
   socket.on('submit_program', ({ elementIds, incidentTarget }: {
     elementIds: ElementId[]
     incidentTarget?: { playerId: string; cardId: IncidentId }

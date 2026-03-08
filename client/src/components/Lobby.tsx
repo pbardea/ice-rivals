@@ -13,10 +13,11 @@ interface LobbyProps {
   onReady: () => void
   onSetGameMode: (mode: GameMode) => void
   onSetTeams: (teams: [string, string][]) => void
+  onLeave: () => void
   error: string | null
 }
 
-export function Lobby({ players, joined, myId, gameMode, teams, roomCode, spectators, onJoin, onReady, onSetGameMode, onSetTeams, error }: LobbyProps) {
+export function Lobby({ players, joined, myId, gameMode, teams, roomCode, spectators, onJoin, onReady, onSetGameMode, onSetTeams, onLeave, error }: LobbyProps) {
   const [name, setName] = useState(() => localStorage.getItem('ice_rivals_name') ?? '')
   const [copied, setCopied] = useState(false)
 
@@ -94,6 +95,14 @@ export function Lobby({ players, joined, myId, gameMode, teams, roomCode, specta
               >
                 {copied ? '✓ Copied!' : 'Copy Link'}
               </button>
+              {joined && (
+                <button
+                  onClick={onLeave}
+                  className="ml-1 px-3 py-1 bg-red-500/15 hover:bg-red-500/30 border border-red-400/30 rounded-lg text-red-300 text-sm transition-all"
+                >
+                  Leave
+                </button>
+              )}
             </div>
           </div>
         )}
