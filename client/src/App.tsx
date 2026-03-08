@@ -243,6 +243,8 @@ export default function App() {
 
   function handleLeave() {
     leaveRoom()
+    window.history.pushState({}, '', window.location.pathname)
+    setState({ ...INITIAL_STATE, roomCode: null })
   }
 
   function handleRestart() {
