@@ -339,8 +339,8 @@ io.on('connection', (socket: Socket) => {
 
     // Room in lobby phase — join as player
     if (state.phase === 'lobby') {
-      if (state.players.filter(p => !p.disconnected).length >= 4) {
-        socket.emit('error', { message: 'Game is full (4 players max).' })
+      if (state.players.filter(p => !p.disconnected).length >= 8) {
+        socket.emit('error', { message: 'Game is full (8 players max).' })
         return
       }
 
@@ -500,9 +500,9 @@ io.on('connection', (socket: Socket) => {
       })
     }
 
-    // Convert spectators to players if there's space (max 4)
+    // Convert spectators to players if there's space (max 8)
     for (const spec of state.spectators) {
-      if (newState.players.filter(p => !p.disconnected).length < 4) {
+      if (newState.players.filter(p => !p.disconnected).length < 8) {
         newState.players.push({
           id: spec.id,
           name: spec.name,

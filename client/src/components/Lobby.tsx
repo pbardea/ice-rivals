@@ -32,20 +32,33 @@ export function Lobby({ players, joined, myId, gameMode, teams, roomCode, specta
   const allReady = players.length >= 2 && players.every(p => p.ready)
   const isHost = players.length > 0 && players[0].id === myId
   const isPairs = gameMode === 'pairs'
-  const teamsAssigned = teams.length === 2
+  const expectedTeams = Math.floor(players.length / 2)
+  const teamsAssigned = isPairs && teams.length === expectedTeams && expectedTeams > 0
+  const needsEvenPlayers = isPairs && players.length % 2 !== 0
 
   function handleAutoAssignTeams() {
-    if (players.length < 4) return
+    if (players.length < 4 || players.length % 2 !== 0) return
     const ids = players.map(p => p.id)
-    onSetTeams([[ids[0], ids[1]], [ids[2], ids[3]]])
+    const pairs: [string, string][] = []
+    for (let i = 0; i < ids.length; i += 2) {
+      pairs.push([ids[i], ids[i + 1]])
+    }
+    onSetTeams(pairs)
   }
 
-  function handleSwapTeams() {
-    if (players.length < 4 || teams.length < 2) return
-    // Swap: move second player of team 1 to team 2 and vice versa
-    const t1 = teams[0].playerIds
-    const t2 = teams[1].playerIds
-    onSetTeams([[t1[0], t2[1]], [t2[0], t1[1]]])
+  function handleShuffleTeams() {
+    if (players.length < 4 || players.length % 2 !== 0) return
+    const ids = players.map(p => p.id)
+    // Fisher-Yates shuffle
+    for (let i = ids.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [ids[i], ids[j]] = [ids[j], ids[i]]
+    }
+    const pairs: [string, string][] = []
+    for (let i = 0; i < ids.length; i += 2) {
+      pairs.push([ids[i], ids[i + 1]])
+    }
+    onSetTeams(pairs)
   }
 
   function getTeamLabel(playerId: string): string | null {
@@ -53,9 +66,11 @@ export function Lobby({ players, joined, myId, gameMode, teams, roomCode, specta
     return teamIdx >= 0 ? `Team ${teamIdx + 1}` : null
   }
 
+  const TEAM_COLORS = ['text-blue-400', 'text-pink-400', 'text-green-400', 'text-yellow-400']
+
   function getTeamColor(playerId: string): string {
     const teamIdx = teams.findIndex(t => t.playerIds.includes(playerId))
-    return teamIdx === 0 ? 'text-blue-400' : teamIdx === 1 ? 'text-pink-400' : ''
+    return teamIdx >= 0 ? TEAM_COLORS[teamIdx % TEAM_COLORS.length] : ''
   }
 
   return (
@@ -165,16 +180,18 @@ export function Lobby({ players, joined, myId, gameMode, teams, roomCode, specta
                 )
               })}
               <div className="text-ice-400 text-sm text-center py-2">
-                {isPairs
-                  ? `Waiting for 4 players (${players.length}/4)...`
-                  : players.length < 4
-                  ? `Waiting for players (${players.length}/4)...`
-                  : null}
+                {players.length < 2
+                  ? `Waiting for players (${players.length}/8)...`
+                  : isPairs && needsEvenPlayers
+                  ? `Need an even number of players for Pairs (${players.length} joined)`
+                  : players.length < 8
+                  ? `${players.length} players joined (up to 8)`
+                  : 'Room full!'}
               </div>
             </div>
 
-            {/* Team Assignment (Pairs mode, host, 4 players) */}
-            {isPairs && isHost && players.length >= 4 && (
+            {/* Team Assignment (Pairs mode, host, enough even players) */}
+            {isPairs && isHost && players.length >= 4 && !needsEvenPlayers && (
               <div className="bg-white/5 rounded-xl p-4 border border-white/10 space-y-3">
                 <div className="text-white font-semibold text-sm text-center">Team Assignment</div>
                 {!teamsAssigned ? (
@@ -188,10 +205,16 @@ export function Lobby({ players, joined, myId, gameMode, teams, roomCode, specta
                   <div className="space-y-2">
                     {teams.map((team, idx) => {
                       const teamPlayers = team.playerIds.map(id => players.find(p => p.id === id))
-                      const color = idx === 0 ? 'border-blue-500/50 bg-blue-900/20' : 'border-pink-500/50 bg-pink-900/20'
+                      const TEAM_BORDER_COLORS = [
+                        'border-blue-500/50 bg-blue-900/20',
+                        'border-pink-500/50 bg-pink-900/20',
+                        'border-green-500/50 bg-green-900/20',
+                        'border-yellow-500/50 bg-yellow-900/20',
+                      ]
+                      const color = TEAM_BORDER_COLORS[idx % TEAM_BORDER_COLORS.length]
                       return (
                         <div key={team.id} className={`rounded-lg p-3 border ${color}`}>
-                          <div className={`text-xs font-semibold mb-1 ${idx === 0 ? 'text-blue-400' : 'text-pink-400'}`}>
+                          <div className={`text-xs font-semibold mb-1 ${TEAM_COLORS[idx % TEAM_COLORS.length]}`}>
                             Team {idx + 1}
                           </div>
                           <div className="text-white text-sm">
@@ -201,10 +224,10 @@ export function Lobby({ players, joined, myId, gameMode, teams, roomCode, specta
                       )
                     })}
                     <button
-                      onClick={handleSwapTeams}
+                      onClick={handleShuffleTeams}
                       className="w-full bg-white/10 hover:bg-white/20 text-white/70 font-semibold py-2 rounded-lg transition-colors text-sm"
                     >
-                      Swap Partners
+                      Shuffle Teams
                     </button>
                   </div>
                 )}
@@ -218,7 +241,7 @@ export function Lobby({ players, joined, myId, gameMode, teams, roomCode, specta
                 {teams.map((team, idx) => {
                   const teamPlayers = team.playerIds.map(id => players.find(p => p.id === id))
                   return (
-                    <div key={team.id} className={`text-sm text-center ${idx === 0 ? 'text-blue-400' : 'text-pink-400'}`}>
+                    <div key={team.id} className={`text-sm text-center ${TEAM_COLORS[idx % TEAM_COLORS.length]}`}>
                       Team {idx + 1}: {teamPlayers.map(p => p?.name ?? '?').join(' & ')}
                     </div>
                   )
@@ -229,7 +252,7 @@ export function Lobby({ players, joined, myId, gameMode, teams, roomCode, specta
             {myPlayer && !myPlayer.ready && (
               <button
                 onClick={onReady}
-                disabled={isPairs && (!teamsAssigned || players.length < 4)}
+                disabled={isPairs && (!teamsAssigned || players.length < 4 || needsEvenPlayers)}
                 className="w-full bg-ice-500 hover:bg-ice-400 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-colors text-lg"
               >
                 Ready Up!

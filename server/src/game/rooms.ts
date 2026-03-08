@@ -58,7 +58,7 @@ export function getSpectators(roomCode: string): Spectator[] {
 export function addPlayer(roomCode: string, playerId: string, playerName: string): GameState | null {
   const state = rooms.get(roomCode)
   if (!state) return null
-  if (state.players.filter(p => !p.disconnected).length >= 4) return null
+  if (state.players.filter(p => !p.disconnected).length >= 8) return null
   if (state.phase !== 'lobby') return null
 
   const player: Player = {
@@ -117,7 +117,7 @@ export function setPlayerReady(roomCode: string, playerId: string): GameState | 
 export function allPlayersReady(state: GameState): boolean {
   const active = state.players.filter(p => !p.disconnected)
   if (state.gameMode === 'pairs') {
-    return active.length === 4 && active.every(p => p.ready) && state.teams.length === 2
+    return active.length >= 4 && active.length % 2 === 0 && active.every(p => p.ready) && state.teams.length === active.length / 2
   }
   return active.length >= 2 && active.every(p => p.ready)
 }
