@@ -13,6 +13,7 @@ import {
   GameMode,
   ElementId,
   IncidentId,
+  Spectator,
 } from '../types/game'
 
 export interface SocketHandlers {
@@ -28,6 +29,9 @@ export interface SocketHandlers {
   onError?: (data: { message: string }) => void
   onGameRestart?: () => void
   onTeamSubmitted?: (data: { teamId: string }) => void
+  onRoomCreated?: (data: { roomCode: string }) => void
+  onJoinedAsSpectator?: (data: { roomCode: string }) => void
+  onSpectatorUpdate?: (data: { spectators: Spectator[] }) => void
 }
 
 const SOCKET_URL = import.meta.env.VITE_SERVER_URL || window.location.origin
@@ -66,6 +70,9 @@ export function useSocket(handlers: SocketHandlers) {
     const onError = (d: { message: string }) => handlersRef.current.onError?.(d)
     const onGameRestart = () => handlersRef.current.onGameRestart?.()
     const onTeamSubmitted = (d: { teamId: string }) => handlersRef.current.onTeamSubmitted?.(d)
+    const onRoomCreated = (d: { roomCode: string }) => handlersRef.current.onRoomCreated?.(d)
+    const onJoinedAsSpectator = (d: { roomCode: string }) => handlersRef.current.onJoinedAsSpectator?.(d)
+    const onSpectatorUpdate = (d: { spectators: Spectator[] }) => handlersRef.current.onSpectatorUpdate?.(d)
 
     socket.on('lobby_update', onLobbyUpdate)
     socket.on('catch_up', onCatchUp)
@@ -79,6 +86,9 @@ export function useSocket(handlers: SocketHandlers) {
     socket.on('error', onError)
     socket.on('game_restart', onGameRestart)
     socket.on('team_submitted', onTeamSubmitted)
+    socket.on('room_created', onRoomCreated)
+    socket.on('joined_as_spectator', onJoinedAsSpectator)
+    socket.on('spectator_update', onSpectatorUpdate)
 
     return () => {
       socket.off('lobby_update', onLobbyUpdate)
@@ -93,11 +103,23 @@ export function useSocket(handlers: SocketHandlers) {
       socket.off('error', onError)
       socket.off('game_restart', onGameRestart)
       socket.off('team_submitted', onTeamSubmitted)
+      socket.off('room_created', onRoomCreated)
+      socket.off('joined_as_spectator', onJoinedAsSpectator)
+      socket.off('spectator_update', onSpectatorUpdate)
     }
   }, [])
 
-  const joinGame = useCallback((playerName: string, playerId: string) => {
-    socketRef.current?.emit('join_game', { playerName, playerId })
+  const createRoom = useCallback((): Promise<string> => {
+    return new Promise((resolve) => {
+      socketRef.current?.emit('create_room')
+      socketRef.current?.once('room_created', (data: { roomCode: string }) => {
+        resolve(data.roomCode)
+      })
+    })
+  }, [])
+
+  const joinRoom = useCallback((roomCode: string, playerName: string, playerId: string) => {
+    socketRef.current?.emit('join_room', { roomCode, playerName, playerId })
   }, [])
 
   const playerReady = useCallback(() => {
@@ -127,5 +149,5 @@ export function useSocket(handlers: SocketHandlers) {
     socketRef.current?.emit('set_teams', { teams })
   }, [])
 
-  return { joinGame, playerReady, submitProgram, nextRound, restartGame, setGameMode, setTeams }
+  return { joinRoom, createRoom, playerReady, submitProgram, nextRound, restartGame, setGameMode, setTeams }
 }

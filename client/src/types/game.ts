@@ -134,6 +134,11 @@ export interface GameState {
 }
 
 // Socket event payloads
+export interface Spectator {
+  id: string
+  name: string
+}
+
 export interface CatchUpPayload {
   phase: GamePhase
   round: number
@@ -149,6 +154,8 @@ export interface CatchUpPayload {
   roundScores: RoundScore[]
   alreadySubmitted: boolean
   submittedCount: number
+  spectator?: boolean
+  spectators?: Spectator[]
 }
 
 export interface GameStartPayload {

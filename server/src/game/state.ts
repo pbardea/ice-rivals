@@ -56,9 +56,15 @@ export interface RoundScore {
   incidentApplied?: IncidentId
 }
 
+export interface Spectator {
+  id: string
+  name: string
+}
+
 export interface GameState {
   roomCode: string
   players: Player[]
+  spectators: Spectator[]
   phase: GamePhase
   round: number
   gameMode: GameMode
@@ -78,6 +84,7 @@ export function createInitialState(roomCode: string): GameState {
   return {
     roomCode,
     players: [],
+    spectators: [],
     phase: 'lobby',
     round: 0,
     gameMode: 'singles',

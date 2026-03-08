@@ -1,7 +1,8 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useSocket } from './hooks/useSocket'
 import { Lobby } from './components/Lobby'
 import { GameBoard } from './components/GameBoard'
+import { RoomEntry } from './components/RoomEntry'
 import {
   Player,
   Team,
@@ -12,7 +13,13 @@ import {
   RoundScore,
   ElementId,
   IncidentId,
+  Spectator,
 } from './types/game'
+
+function getRoomCodeFromUrl(): string | null {
+  const params = new URLSearchParams(window.location.search)
+  return params.get('room') || null
+}
 
 function getOrCreatePlayerId(): string {
   let id = localStorage.getItem('ice_rivals_player_id')
@@ -26,6 +33,9 @@ function getOrCreatePlayerId(): string {
 interface AppState {
   joined: boolean
   myId: string | null
+  roomCode: string | null
+  isSpectator: boolean
+  spectators: Spectator[]
   players: Player[]
   gameMode: GameMode
   teams: Team[]
@@ -48,6 +58,9 @@ interface AppState {
 const INITIAL_STATE: AppState = {
   joined: false,
   myId: null,
+  roomCode: getRoomCodeFromUrl(),
+  isSpectator: false,
+  spectators: [],
   players: [],
   gameMode: 'singles',
   teams: [],
@@ -75,7 +88,7 @@ export default function App() {
     setState(prev => ({ ...prev, ...updates }))
   }, [])
 
-  const { joinGame, playerReady, submitProgram, nextRound, restartGame, setGameMode, setTeams } = useSocket({
+  const { joinRoom, createRoom, playerReady, submitProgram, nextRound, restartGame, setGameMode, setTeams } = useSocket({
     onLobbyUpdate: data => {
       updateState({ players: data.players, gameMode: data.gameMode, teams: data.teams, myId: myPlayerId, error: null })
     },
@@ -98,6 +111,8 @@ export default function App() {
         roundScores: data.roundScores,
         mySubmitted: data.alreadySubmitted,
         submittedCount: data.submittedCount,
+        isSpectator: data.spectator ?? false,
+        spectators: data.spectators ?? prev.spectators,
       }))
     },
     onGameStart: data => {
@@ -170,14 +185,46 @@ export default function App() {
         ...INITIAL_STATE,
         joined: true,
         myId: prev.myId,
+        roomCode: prev.roomCode,
         players: prev.players,
       }))
     },
+    onJoinedAsSpectator: (_data) => {
+      updateState({ isSpectator: true, joined: true, myId: myPlayerId })
+    },
+    onSpectatorUpdate: data => {
+      updateState({ spectators: data.spectators })
+    },
   })
 
+  // Auto-rejoin on page refresh if we have a room code and stored name
+  const autoJoinedRef = useRef(false)
+  useEffect(() => {
+    if (autoJoinedRef.current) return
+    const urlRoom = getRoomCodeFromUrl()
+    const storedName = localStorage.getItem('ice_rivals_name')
+    if (urlRoom && storedName) {
+      autoJoinedRef.current = true
+      joinRoom(urlRoom, storedName, myPlayerId)
+      updateState({ joined: true, myId: myPlayerId, roomCode: urlRoom })
+    }
+  }, [joinRoom, myPlayerId, updateState])
+
   function handleJoin(name: string) {
-    joinGame(name, myPlayerId)
+    if (state.roomCode) {
+      joinRoom(state.roomCode, name, myPlayerId)
+    }
     updateState({ joined: true, myId: myPlayerId })
+  }
+
+  function handleSetRoomCode(roomCode: string) {
+    updateState({ roomCode })
+  }
+
+  async function handleCreateRoom(): Promise<string> {
+    const code = await createRoom()
+    updateState({ roomCode: code })
+    return code
   }
 
   function handleSubmit(elements: ElementId[], incidentTarget?: { playerId: string; cardId: IncidentId }) {
@@ -194,6 +241,16 @@ export default function App() {
     restartGame()
   }
 
+  if (!state.roomCode) {
+    return (
+      <RoomEntry
+        onCreateRoom={handleCreateRoom}
+        onJoinRoom={handleSetRoomCode}
+        error={state.error}
+      />
+    )
+  }
+
   if (state.phase === 'lobby') {
     return (
       <Lobby
@@ -202,6 +259,8 @@ export default function App() {
         myId={state.myId}
         gameMode={state.gameMode}
         teams={state.teams}
+        roomCode={state.roomCode}
+        spectators={state.spectators}
         onJoin={handleJoin}
         onReady={playerReady}
         onSetGameMode={setGameMode}
@@ -230,6 +289,7 @@ export default function App() {
       mySubmitted={state.mySubmitted}
       winner={state.winner}
       finalScores={state.finalScores}
+      isSpectator={state.isSpectator}
       onSubmit={handleSubmit}
       onNextRound={handleNextRound}
       onRestart={handleRestart}

@@ -1,6 +1,30 @@
-import { GameState, GameMode, createInitialState, Player, Team } from './state'
+import { GameState, GameMode, createInitialState, Player, Team, Spectator } from './state'
 
 const rooms = new Map<string, GameState>()
+
+export function generateRoomCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ'
+  let code: string
+  do {
+    code = ''
+    for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)]
+  } while (rooms.has(code))
+  return code
+}
+
+export function createRoom(): string {
+  const code = generateRoomCode()
+  rooms.set(code, createInitialState(code))
+  return code
+}
+
+export function findRoomByPlayerId(playerId: string): GameState | undefined {
+  for (const state of rooms.values()) {
+    if (state.players.some(p => p.id === playerId)) return state
+    if (state.spectators.some(s => s.id === playerId)) return state
+  }
+  return undefined
+}
 
 export function getRoom(code: string): GameState | undefined {
   return rooms.get(code)
@@ -8,6 +32,27 @@ export function getRoom(code: string): GameState | undefined {
 
 export function setRoom(code: string, state: GameState): void {
   rooms.set(code, state)
+}
+
+export function addSpectator(roomCode: string, spectator: Spectator): GameState | null {
+  const state = rooms.get(roomCode)
+  if (!state) return null
+  if (!state.spectators.some(s => s.id === spectator.id)) {
+    state.spectators.push(spectator)
+  }
+  return state
+}
+
+export function removeSpectator(roomCode: string, spectatorId: string): GameState | null {
+  const state = rooms.get(roomCode)
+  if (!state) return null
+  state.spectators = state.spectators.filter(s => s.id !== spectatorId)
+  return state
+}
+
+export function getSpectators(roomCode: string): Spectator[] {
+  const state = rooms.get(roomCode)
+  return state?.spectators ?? []
 }
 
 export function addPlayer(roomCode: string, playerId: string, playerName: string): GameState | null {

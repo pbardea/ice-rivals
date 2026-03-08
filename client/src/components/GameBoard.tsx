@@ -23,6 +23,7 @@ interface GameBoardProps {
   mySubmitted: boolean
   winner: { playerId: string; name: string; total: number } | null
   finalScores: { playerId: string; name: string; total: number }[]
+  isSpectator?: boolean
   onSubmit: (elements: ElementId[], incidentTarget?: { playerId: string; cardId: IncidentId }) => void
   onNextRound: () => void
   onRestart: () => void
@@ -57,6 +58,7 @@ export function GameBoard({
   mySubmitted,
   winner,
   finalScores,
+  isSpectator,
   onSubmit,
   onNextRound,
   onRestart,
@@ -65,6 +67,14 @@ export function GameBoard({
   return (
     <div className="min-h-screen bg-gradient-to-br from-ice-900 via-ice-800 to-slate-900 p-4">
       <div className="max-w-2xl mx-auto space-y-4">
+        {/* Spectator Banner */}
+        {isSpectator && (
+          <div className="bg-amber-900/30 border border-amber-500/50 rounded-xl px-4 py-3 text-center">
+            <span className="text-amber-300 font-semibold">Spectating</span>
+            <span className="text-amber-400/80 text-sm ml-2">— you'll join the next game</span>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -92,7 +102,7 @@ export function GameBoard({
           </div>
         )}
 
-        {phase === 'planning' && hand.length > 0 && incidentCard && (
+        {phase === 'planning' && hand.length > 0 && incidentCard && !isSpectator && (
           <ProgramBuilder
             hand={hand}
             partnerHand={isPairs ? partnerHand : []}

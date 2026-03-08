@@ -6,7 +6,8 @@ import cors from 'cors'
 import {
   getRoom, setRoom, addPlayer, findPlayer,
   disconnectPlayer, reconnectPlayer, setPlayerReady,
-  allPlayersReady, resetRoom, setGameMode, setTeams,
+  allPlayersReady, setGameMode, setTeams,
+  createRoom, findRoomByPlayerId, addSpectator, removeSpectator,
 } from './game/rooms'
 import {
   dealHands, pickJudge, computeLeaderboard, getLastPlacePlayerId, getLastPlaceTeamId,
@@ -31,12 +32,10 @@ app.use(express.static(clientDist))
 app.get('*', (_req, res) => res.sendFile(path.join(clientDist, 'index.html')))
 
 const PORT = process.env.PORT || 3001
-const ROOM = 'GLOBAL'
-
-setRoom(ROOM, createInitialState(ROOM))
 
 const socketToPlayerId = new Map<string, string>()
 const playerIdToSocket = new Map<string, string>()
+const socketToRoom = new Map<string, string>()
 
 function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms))
@@ -45,6 +44,10 @@ function delay(ms: number): Promise<void> {
 function emitToPlayer(playerId: string, event: string, data: unknown) {
   const socketId = playerIdToSocket.get(playerId)
   if (socketId) io.to(socketId).emit(event, data)
+}
+
+function getRoomForSocket(socket: Socket): string | undefined {
+  return socketToRoom.get(socket.id)
 }
 
 function getPartnerHand(state: GameState, playerId: string): ElementId[] {
@@ -75,28 +78,49 @@ function getTotalExpected(state: GameState): number {
   return state.gameMode === 'pairs' ? state.teams.length : state.players.length
 }
 
-function sendCatchUp(playerId: string) {
-  const state = getRoom(ROOM)
+function sendCatchUp(playerId: string, roomCode: string, opts?: { spectator?: boolean }) {
+  const state = getRoom(roomCode)
   if (!state) return
-  emitToPlayer(playerId, 'catch_up', {
-    phase: state.phase,
-    round: state.round,
-    gameMode: state.gameMode,
-    teams: state.teams,
-    judgeCard: state.judgeCard,
-    players: state.players,
-    leaderboard: state.leaderboard,
-    hand: state.hands[playerId] ?? [],
-    partnerHand: getPartnerHand(state, playerId),
-    incidentCard: state.incidentCards[playerId] ?? null,
-    diceResults: state.diceResults,
-    roundScores: state.roundScores,
-    alreadySubmitted: isSubmittedInMode(state, playerId),
-    submittedCount: getSubmittedCount(state),
-  })
+  if (opts?.spectator) {
+    emitToPlayer(playerId, 'catch_up', {
+      spectator: true,
+      phase: state.phase,
+      round: state.round,
+      gameMode: state.gameMode,
+      teams: state.teams,
+      judgeCard: state.judgeCard,
+      players: state.players,
+      leaderboard: state.leaderboard,
+      hand: [],
+      partnerHand: [],
+      incidentCard: null,
+      diceResults: state.diceResults,
+      roundScores: state.roundScores,
+      alreadySubmitted: false,
+      submittedCount: getSubmittedCount(state),
+    })
+  } else {
+    emitToPlayer(playerId, 'catch_up', {
+      phase: state.phase,
+      round: state.round,
+      gameMode: state.gameMode,
+      teams: state.teams,
+      judgeCard: state.judgeCard,
+      players: state.players,
+      leaderboard: state.leaderboard,
+      hand: state.hands[playerId] ?? [],
+      partnerHand: getPartnerHand(state, playerId),
+      incidentCard: state.incidentCards[playerId] ?? null,
+      diceResults: state.diceResults,
+      roundScores: state.roundScores,
+      alreadySubmitted: isSubmittedInMode(state, playerId),
+      submittedCount: getSubmittedCount(state),
+    })
+  }
 }
 
 async function runRound(state: GameState): Promise<void> {
+  const roomCode = state.roomCode
   const round = state.round
   const judgeCard = pickJudge(state.judgesUsed)
   state.judgesUsed.push(judgeCard.id)
@@ -113,7 +137,7 @@ async function runRound(state: GameState): Promise<void> {
   state.diceResults = []
   state.roundScores = []
   state.incidentMap = {}
-  setRoom(ROOM, state)
+  setRoom(roomCode, state)
 
   for (const player of state.players) {
     emitToPlayer(player.id, 'round_start', {
@@ -129,6 +153,7 @@ async function runRound(state: GameState): Promise<void> {
 }
 
 async function resolveRound(state: GameState): Promise<void> {
+  const roomCode = state.roomCode
   const isChampionship = state.round === 3
   const isPairs = state.gameMode === 'pairs'
   const judgeId = state.judgeCard?.id ?? null
@@ -142,12 +167,12 @@ async function resolveRound(state: GameState): Promise<void> {
   }
 
   state.phase = 'revealing'
-  setRoom(ROOM, state)
-  io.to(ROOM).emit('programs_revealed', { allPrograms: Object.values(state.programs) })
+  setRoom(roomCode, state)
+  io.to(roomCode).emit('programs_revealed', { allPrograms: Object.values(state.programs) })
 
   await delay(1500)
   state.phase = 'rolling'
-  setRoom(ROOM, state)
+  setRoom(roomCode, state)
 
   // Build incident map: in pairs mode, incidents target a team (stored by teamId)
   const incidentMap: Record<string, IncidentId> = {}
@@ -185,7 +210,7 @@ async function resolveRound(state: GameState): Promise<void> {
       state.diceResults.push(result)
 
       await delay(2200)
-      io.to(ROOM).emit('dice_result', result)
+      io.to(roomCode).emit('dice_result', result)
     }
 
     const { results, incidentApplied } = applyPostRollEffects(diceResults, incident, playedIncident)
@@ -229,12 +254,12 @@ async function resolveRound(state: GameState): Promise<void> {
 
   if (state.round >= 3) {
     state.phase = 'game_over'
-    setRoom(ROOM, state)
-    io.to(ROOM).emit('game_over', { finalScores: state.leaderboard, winner: state.leaderboard[0] })
+    setRoom(roomCode, state)
+    io.to(roomCode).emit('game_over', { finalScores: state.leaderboard, winner: state.leaderboard[0] })
   } else {
     state.phase = 'round_end'
-    setRoom(ROOM, state)
-    io.to(ROOM).emit('round_end', { scores: roundScores, leaderboard: state.leaderboard })
+    setRoom(roomCode, state)
+    io.to(roomCode).emit('round_end', { scores: roundScores, leaderboard: state.leaderboard })
   }
 }
 
@@ -272,62 +297,92 @@ function checkAndResolve(state: GameState) {
 io.on('connection', (socket: Socket) => {
   console.log(`[+] ${socket.id} connected`)
 
-  socket.on('join_game', ({ playerName, playerId }: { playerName: string; playerId: string }) => {
-    const state = getRoom(ROOM)!
+  socket.on('create_room', (callback?: (data: { roomCode: string }) => void) => {
+    const roomCode = createRoom()
+    console.log(`[Room] Created ${roomCode}`)
+    if (callback) callback({ roomCode })
+    else socket.emit('room_created', { roomCode })
+  })
 
-    const existing = findPlayer(ROOM, playerId)
+  socket.on('join_room', ({ roomCode, playerName, playerId }: { roomCode: string; playerName: string; playerId: string }) => {
+    const state = getRoom(roomCode)
+    if (!state) {
+      socket.emit('error', { message: 'Room not found.' })
+      return
+    }
+
+    // Check if this player was already in the room (reconnect)
+    const existing = findPlayer(roomCode, playerId)
     if (existing) {
       const oldSocket = playerIdToSocket.get(playerId)
-      if (oldSocket) socketToPlayerId.delete(oldSocket)
+      if (oldSocket) {
+        socketToPlayerId.delete(oldSocket)
+        socketToRoom.delete(oldSocket)
+      }
       playerIdToSocket.set(playerId, socket.id)
       socketToPlayerId.set(socket.id, playerId)
-      reconnectPlayer(ROOM, playerId)
-      socket.join(ROOM)
+      socketToRoom.set(socket.id, roomCode)
+      reconnectPlayer(roomCode, playerId)
+      socket.join(roomCode)
 
-      const updated = getRoom(ROOM)!
-      io.to(ROOM).emit('lobby_update', { players: updated.players, gameMode: updated.gameMode, teams: updated.teams })
-      console.log(`[Reconnect] ${existing.name} (${playerId})`)
+      const updated = getRoom(roomCode)!
+      io.to(roomCode).emit('lobby_update', { players: updated.players, gameMode: updated.gameMode, teams: updated.teams })
+      console.log(`[Reconnect] ${existing.name} (${playerId}) in room ${roomCode}`)
 
       if (state.phase === 'lobby') {
         socket.emit('lobby_update', { players: updated.players, gameMode: updated.gameMode, teams: updated.teams })
       } else {
-        sendCatchUp(playerId)
+        sendCatchUp(playerId, roomCode)
       }
       return
     }
 
-    if (state.players.filter(p => !p.disconnected).length >= 4) {
-      socket.emit('error', { message: 'Game is full (4 players max).' })
-      return
-    }
-    if (state.phase !== 'lobby') {
-      socket.emit('error', { message: 'Game already in progress.' })
+    // Room in lobby phase — join as player
+    if (state.phase === 'lobby') {
+      if (state.players.filter(p => !p.disconnected).length >= 4) {
+        socket.emit('error', { message: 'Game is full (4 players max).' })
+        return
+      }
+
+      addPlayer(roomCode, playerId, playerName)
+      playerIdToSocket.set(playerId, socket.id)
+      socketToPlayerId.set(socket.id, playerId)
+      socketToRoom.set(socket.id, roomCode)
+      socket.join(roomCode)
+
+      const updated = getRoom(roomCode)!
+      io.to(roomCode).emit('lobby_update', { players: updated.players, gameMode: updated.gameMode, teams: updated.teams })
+      console.log(`[Join] ${playerName} (${playerId}) in room ${roomCode}`)
       return
     }
 
-    addPlayer(ROOM, playerId, playerName)
+    // Game in progress, new player — join as spectator
+    addSpectator(roomCode, { id: playerId, name: playerName })
     playerIdToSocket.set(playerId, socket.id)
     socketToPlayerId.set(socket.id, playerId)
-    socket.join(ROOM)
+    socketToRoom.set(socket.id, roomCode)
+    socket.join(roomCode)
 
-    const updated = getRoom(ROOM)!
-    io.to(ROOM).emit('lobby_update', { players: updated.players, gameMode: updated.gameMode, teams: updated.teams })
-    console.log(`[Join] ${playerName} (${playerId})`)
+    socket.emit('joined_as_spectator', { roomCode })
+    sendCatchUp(playerId, roomCode, { spectator: true })
+    console.log(`[Spectator] ${playerName} (${playerId}) in room ${roomCode}`)
   })
 
   socket.on('player_ready', () => {
     const playerId = socketToPlayerId.get(socket.id)
     if (!playerId) return
-    const state = setPlayerReady(ROOM, playerId)
+    const roomCode = getRoomForSocket(socket)
+    if (!roomCode) return
+    const state = setPlayerReady(roomCode, playerId)
     if (!state) return
-    setRoom(ROOM, state)
-    io.to(ROOM).emit('lobby_update', { players: state.players, gameMode: state.gameMode, teams: state.teams })
+    setRoom(roomCode, state)
+    io.to(roomCode).emit('lobby_update', { players: state.players, gameMode: state.gameMode, teams: state.teams })
 
     if (allPlayersReady(state)) {
       state.round = 1
       state.phase = 'round_start'
-      setRoom(ROOM, state)
-      io.to(ROOM).emit('game_start', { initialState: state })
+      setRoom(roomCode, state)
+      io.to(roomCode).emit('game_start', { initialState: state })
       delay(1500).then(() => runRound(state))
     }
   })
@@ -335,14 +390,16 @@ io.on('connection', (socket: Socket) => {
   socket.on('set_game_mode', ({ mode }: { mode: GameMode }) => {
     const playerId = socketToPlayerId.get(socket.id)
     if (!playerId) return
-    const state = getRoom(ROOM)
+    const roomCode = getRoomForSocket(socket)
+    if (!roomCode) return
+    const state = getRoom(roomCode)
     if (!state || state.phase !== 'lobby') return
     // Only the host (first player) can set mode
     if (state.players.length === 0 || state.players[0].id !== playerId) return
 
-    const updated = setGameMode(ROOM, mode)
+    const updated = setGameMode(roomCode, mode)
     if (updated) {
-      io.to(ROOM).emit('lobby_update', { players: updated.players, gameMode: updated.gameMode, teams: updated.teams })
+      io.to(roomCode).emit('lobby_update', { players: updated.players, gameMode: updated.gameMode, teams: updated.teams })
       console.log(`[Mode] Set to ${mode} by ${playerId}`)
     }
   })
@@ -350,13 +407,15 @@ io.on('connection', (socket: Socket) => {
   socket.on('set_teams', ({ teams: teamPairs }: { teams: [string, string][] }) => {
     const playerId = socketToPlayerId.get(socket.id)
     if (!playerId) return
-    const state = getRoom(ROOM)
+    const roomCode = getRoomForSocket(socket)
+    if (!roomCode) return
+    const state = getRoom(roomCode)
     if (!state || state.phase !== 'lobby' || state.gameMode !== 'pairs') return
     if (state.players.length === 0 || state.players[0].id !== playerId) return
 
-    const updated = setTeams(ROOM, teamPairs)
+    const updated = setTeams(roomCode, teamPairs)
     if (updated) {
-      io.to(ROOM).emit('lobby_update', { players: updated.players, gameMode: updated.gameMode, teams: updated.teams })
+      io.to(roomCode).emit('lobby_update', { players: updated.players, gameMode: updated.gameMode, teams: updated.teams })
       console.log(`[Teams] Set by ${playerId}`)
     }
   })
@@ -367,7 +426,9 @@ io.on('connection', (socket: Socket) => {
   }) => {
     const playerId = socketToPlayerId.get(socket.id)
     if (!playerId) return
-    const state = getRoom(ROOM)
+    const roomCode = getRoomForSocket(socket)
+    if (!roomCode) return
+    const state = getRoom(roomCode)
     if (!state || state.phase !== 'planning') return
 
     if (state.gameMode === 'pairs') {
@@ -376,11 +437,11 @@ io.on('connection', (socket: Socket) => {
       // If team already submitted, ignore
       if (state.programs[teamId]) return
       state.programs[teamId] = { playerId: teamId, elementIds, incidentTarget } as Program
-      setRoom(ROOM, state)
+      setRoom(roomCode, state)
 
       const submittedCount = getSubmittedCount(state)
       const total = getTotalExpected(state)
-      io.to(ROOM).emit('submission_update', { submittedCount, total })
+      io.to(roomCode).emit('submission_update', { submittedCount, total })
 
       // Notify both teammates
       const team = state.teams.find(t => t.id === teamId)
@@ -392,11 +453,11 @@ io.on('connection', (socket: Socket) => {
       console.log(`[Submit] Team ${teamId} by ${playerId} (${submittedCount}/${total})`)
     } else {
       state.programs[playerId] = { playerId, elementIds, incidentTarget } as Program
-      setRoom(ROOM, state)
+      setRoom(roomCode, state)
 
       const submittedCount = getSubmittedCount(state)
       const total = getTotalExpected(state)
-      io.to(ROOM).emit('submission_update', { submittedCount, total })
+      io.to(roomCode).emit('submission_update', { submittedCount, total })
       console.log(`[Submit] ${playerId} (${submittedCount}/${total})`)
     }
 
@@ -406,21 +467,25 @@ io.on('connection', (socket: Socket) => {
   socket.on('next_round', () => {
     const playerId = socketToPlayerId.get(socket.id)
     if (!playerId) return
-    const state = getRoom(ROOM)
+    const roomCode = getRoomForSocket(socket)
+    if (!roomCode) return
+    const state = getRoom(roomCode)
     if (!state || state.phase !== 'round_end') return
 
     state.round += 1
     state.phase = 'round_start'
     for (const p of state.players) p.ready = false
-    setRoom(ROOM, state)
+    setRoom(roomCode, state)
     delay(500).then(() => runRound(state))
   })
 
   socket.on('restart_game', () => {
-    const state = getRoom(ROOM)
+    const roomCode = getRoomForSocket(socket)
+    if (!roomCode) return
+    const state = getRoom(roomCode)
     if (!state || state.phase !== 'game_over') return
 
-    const newState = createInitialState(ROOM)
+    const newState = createInitialState(roomCode)
     newState.gameMode = state.gameMode
     newState.teams = state.teams
     for (const p of state.players) {
@@ -434,27 +499,60 @@ io.on('connection', (socket: Socket) => {
         teamId: p.teamId,
       })
     }
-    setRoom(ROOM, newState)
-    io.to(ROOM).emit('game_restart', {})
-    io.to(ROOM).emit('lobby_update', { players: newState.players, gameMode: newState.gameMode, teams: newState.teams })
-    console.log('[Restart] Game reset to lobby')
+
+    // Convert spectators to players if there's space (max 4)
+    for (const spec of state.spectators) {
+      if (newState.players.filter(p => !p.disconnected).length < 4) {
+        newState.players.push({
+          id: spec.id,
+          name: spec.name,
+          ready: false,
+          totalScore: 0,
+          incidentCard: null,
+        })
+      }
+    }
+    // Clear spectators since they're now players (or stayed spectators if full)
+    newState.spectators = []
+
+    setRoom(roomCode, newState)
+    io.to(roomCode).emit('game_restart', {})
+    io.to(roomCode).emit('lobby_update', { players: newState.players, gameMode: newState.gameMode, teams: newState.teams })
+    console.log(`[Restart] Game reset to lobby in room ${roomCode}`)
   })
 
   socket.on('disconnect', () => {
     const playerId = socketToPlayerId.get(socket.id)
-    if (playerId) {
-      const { state, removed } = disconnectPlayer(ROOM, playerId)
+    const roomCode = getRoomForSocket(socket)
+
+    if (playerId && roomCode) {
+      // Check if this is a spectator
+      const state = getRoom(roomCode)
+      if (state) {
+        const isSpectator = state.spectators.some(s => s.id === playerId)
+        if (isSpectator) {
+          removeSpectator(roomCode, playerId)
+          playerIdToSocket.delete(playerId)
+          socketToPlayerId.delete(socket.id)
+          socketToRoom.delete(socket.id)
+          console.log(`[-] Spectator ${playerId} disconnected from room ${roomCode}`)
+          return
+        }
+      }
+
+      const { state: updatedState, removed } = disconnectPlayer(roomCode, playerId)
       playerIdToSocket.delete(playerId)
       socketToPlayerId.delete(socket.id)
+      socketToRoom.delete(socket.id)
 
-      if (!state) {
-        setRoom(ROOM, createInitialState(ROOM))
-        console.log('[Reset] All players gone')
+      if (!updatedState) {
+        // Room was deleted (all players gone from lobby)
+        console.log(`[Reset] Room ${roomCode} deleted — all players gone`)
       } else {
-        io.to(ROOM).emit('lobby_update', { players: state.players, gameMode: state.gameMode, teams: state.teams })
+        io.to(roomCode).emit('lobby_update', { players: updatedState.players, gameMode: updatedState.gameMode, teams: updatedState.teams })
 
-        if (state.phase === 'planning' && !removed) {
-          checkAndResolve(state)
+        if (updatedState.phase === 'planning' && !removed) {
+          checkAndResolve(updatedState)
         }
       }
     }

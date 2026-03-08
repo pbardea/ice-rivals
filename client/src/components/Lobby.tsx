@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Player, GameMode, Team } from '../types/game'
+import { Player, GameMode, Team, Spectator } from '../types/game'
 
 interface LobbyProps {
   players: Player[]
@@ -7,6 +7,8 @@ interface LobbyProps {
   myId: string | null
   gameMode: GameMode
   teams: Team[]
+  roomCode: string
+  spectators: Spectator[]
   onJoin: (name: string) => void
   onReady: () => void
   onSetGameMode: (mode: GameMode) => void
@@ -14,8 +16,17 @@ interface LobbyProps {
   error: string | null
 }
 
-export function Lobby({ players, joined, myId, gameMode, teams, onJoin, onReady, onSetGameMode, onSetTeams, error }: LobbyProps) {
+export function Lobby({ players, joined, myId, gameMode, teams, roomCode, spectators, onJoin, onReady, onSetGameMode, onSetTeams, error }: LobbyProps) {
   const [name, setName] = useState(() => localStorage.getItem('ice_rivals_name') ?? '')
+  const [copied, setCopied] = useState(false)
+
+  function handleCopyLink() {
+    const url = `${window.location.origin}?room=${roomCode}`
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
 
   const myPlayer = players.find(p => p.id === myId)
   const allReady = players.length >= 2 && players.every(p => p.ready)
@@ -55,6 +66,19 @@ export function Lobby({ players, joined, myId, gameMode, teams, onJoin, onReady,
           <h1 className="text-3xl font-bold text-white">Ice Rivals</h1>
           <p className="text-ice-300 mt-1">Figure Skating Board Game</p>
         </div>
+
+        {roomCode && (
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <span className="text-ice-300 text-sm">Room:</span>
+            <span className="text-white font-mono font-bold text-lg tracking-widest">{roomCode}</span>
+            <button
+              onClick={handleCopyLink}
+              className="ml-1 px-3 py-1 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-ice-300 text-sm transition-colors"
+            >
+              {copied ? 'Copied!' : 'Copy Link'}
+            </button>
+          </div>
+        )}
 
         {error && (
           <div className="bg-red-500/20 border border-red-400/50 rounded-lg px-4 py-2 mb-4 text-red-300 text-sm text-center">
@@ -219,6 +243,19 @@ export function Lobby({ players, joined, myId, gameMode, teams, onJoin, onReady,
             {allReady && (
               <div className="text-center text-green-400 font-semibold animate-pulse">
                 All ready! Starting game...
+              </div>
+            )}
+
+            {spectators.length > 0 && (
+              <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                <div className="text-ice-400 text-xs uppercase tracking-wider mb-2">Spectators ({spectators.length})</div>
+                <div className="flex flex-wrap gap-2">
+                  {spectators.map(s => (
+                    <span key={s.id} className="bg-white/10 rounded-full px-3 py-1 text-ice-300 text-sm">
+                      {s.name}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
           </div>
