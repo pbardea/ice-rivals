@@ -2,6 +2,12 @@
 
 A multiplayer figure skating board game where players compete across 3 rounds, building skating programs, rolling dice, and sabotaging opponents.
 
+**Play now at [icerivals.com](https://icerivals.com)**
+
+<p align="center">
+  <img src="screenshot.png" alt="Ice Rivals gameplay" width="720" />
+</p>
+
 ## How to Play
 
 **1–8 players** compete in a figure skating competition over **3 rounds**.
